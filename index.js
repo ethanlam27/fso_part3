@@ -9,7 +9,7 @@ morgan.token('postbody', (req, res) => {
 })
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :postbody'))
-
+app.use(express.static('build'))
 
 let notes = [
     {
