@@ -1,7 +1,12 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
+const db = require('./models/db')
+const { response } = require('express')
 
+
+// -- MIDDLEWARE --
 app.use(express.json())
 
 morgan.token('postbody', (req, res) => {
@@ -11,87 +16,104 @@ morgan.token('postbody', (req, res) => {
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :postbody'))
 app.use(express.static('build'))
 
-let notes = [
-    {
-        name: "Arto Hellas",
-        number: "040-123456",
-        id: 1
-    },
-    {
-        name: "Ada Lovelace",
-        number: "39-44",
-        id: 2
-    },
-    {
-        name: "Dan Abramov",
-        number: "12-43-23",
-        id: 3
-    },
-    {
-        name: "Mary Poppendieck",
-        number: "39-23",
-        id: 4
-    }
-]
+// -- ROUTES --
 
 app.get('/', (req, res) => {
     res.send('<h1>Hello World!</h1>')
 })
 
-app.get('/api/persons', (req, res) => {
-    res.json(notes)
-})
-
 app.get('/info', (req, res) => {
-    res.send(`<p>Phonebook has info for ${notes.length} people</p><p>${new Date()}</p>`)
+    db.connectToDB()
+    db.PrsonModel.find({})
+        .then(result => {
+            const numEntries = result.length
+            res.send(`<p>Phonebook has info for ${numEntries} people</p><p>${new Date()}</p>`)
+            db.closeDB()
+        })
+        .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const note = notes.find( note => note.id === id)
-
-    if (note) {
-        res.json(note)
-    } else {
-        res.status(404).end()
-    }
+app.get('/api/persons', (req, res, next) => {
+    db.connectToDB()
+    db.PrsonModel.find({})
+        .then(result => {
+            res.json(result)
+            db.closeDB()
+        })
+        .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    notes = notes.filter(note => note.id !== id)
-    res.status(204).end()
+app.get('/api/persons/:id', (req, res, next) => {
+    // string
+    const desiredID = req.params.id
+
+    db.connectToDB()
+    db.PrsonModel.findById(desiredID)
+        .then(result => {
+            res.json(result)
+            db.closeDB()
+        })
+        .catch(error => next(error))
 })
 
+app.delete('/api/persons/:id', (req, res, next) => {
+    const id = req.params.id
 
-const genID = () => {
-    return Math.ceil(Math.random() * 100000)
-}
+    db.connectToDB()
+    db.PrsonModel.findByIdAndRemove(id)
+        .then(result => {
+            res.status(204).end()
+            db.closeDB()
+        })
+        .catch(error => next(error))
+})
 
-
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const note = req.body
-    const duplicateNote = notes.find( n => n.name === note.name)
-    note.id = genID()
 
     if (!note.name || !note.number) {
         res.status(400).json({
             error: 'name and number must exist'
         })
-    } else if (duplicateNote) {
-        res.status(400).json({
-            error: 'name must be unique'
-        })
     } else {
+        const prsonToAdd = new db.PrsonModel({
+            name: note.name,
+            number: note.number
+        })
 
-
-        notes = notes.concat(note)
-        res.json(note)
+        db.connectToDB()
+        prsonToAdd.save()
+            .then(savedPrson => {
+                res.json(savedPrson)
+                db.closeDB()
+            })
+            .catch(error => next(error))
     }
 })
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const id = req.params.id
+    const person = req.body
+
+    db.connectToDB()
+    db.PrsonModel.findByIdAndUpdate(id, person, {new: true})
+        .then(updatedPerson => {
+            res.json(updatedPerson)
+            db.closeDB()
+        })
+        .catch(error => next(error))
+})
+
+
+const errorHandler = (error, request, response, next) => {
+    console.error('error message: ', error.message)
+    
+    next(error)
+  }
+  
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
-
