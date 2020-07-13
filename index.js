@@ -96,7 +96,7 @@ app.put('/api/persons/:id', (req, res, next) => {
     const person = req.body
 
     db.connectToDB()
-    db.PrsonModel.findByIdAndUpdate(id, person, {new: true})
+    db.PrsonModel.findByIdAndUpdate(id, person, {new: true, runValidators: true})
         .then(updatedPerson => {
             res.json(updatedPerson)
             db.closeDB()

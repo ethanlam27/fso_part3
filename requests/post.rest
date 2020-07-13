@@ -2,7 +2,6 @@ POST https://young-stream-39805.herokuapp.com/api/persons
 Content-Type: application/json
 
 {
-    "name": "Kallen",
-    "number": 123,
-    "id": 7
+    "name": "anna6",
+    "number": 123
 }

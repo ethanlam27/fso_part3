@@ -2,11 +2,14 @@ const mongoose = require('mongoose')
 const uniqueValidator = require('mongoose-unique-validator')
 
 mongoose.set('useFindAndModify', false)
+mongoose.set('useCreateIndex', true);
+
 
 const prsonSchema = new mongoose.Schema({
     name: 
     {
         type: String,
+        minlength: 3,
         unique: true,
         required: true
     },
@@ -14,6 +17,7 @@ const prsonSchema = new mongoose.Schema({
     number: 
     {
         type: String,
+        minlength: 8,
         required: true
     }
 })
