@@ -18,7 +18,7 @@ const prsonSchema = new mongoose.Schema({
     }
 })
 // Apply the uniqueValidator plugin to userSchema.
-userSchema.plugin(uniqueValidator);
+prsonSchema.plugin(uniqueValidator);
 
 prsonSchema.set('toJSON', {
     transform: (document, returnedObject) => {
