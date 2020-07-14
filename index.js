@@ -95,17 +95,21 @@ app.post('/api/persons', (req, res, next) => {
 
 app.put('/api/persons/:id', (req, res, next) => {
     const id = req.params.id
-    const person = req.body
+    const person = 
+        {
+            name: req.body.name,
+            number: req.body.number
+        }
 
     db.connectToDB()
-    db.PrsonModel.findByIdAndUpdate(id, person, {new: true, runValidators: true})
+    db.PrsonModel.findOneAndUpdate({_id: id}, person, {new: true})
         .then(updatedPerson => {
+            console.log(updatedPerson)
             res.json(updatedPerson)
             db.closeDB()
         })
         .catch(error => next(error))
 })
-
 
 const errorHandler = (error, request, response, next) => {
     console.error('error message: ', error.message)
@@ -125,3 +129,4 @@ const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
+
