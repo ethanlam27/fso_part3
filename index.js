@@ -7,6 +7,8 @@ const { response } = require('express')
 
 
 // -- MIDDLEWARE --
+
+// populates req.body by parsing application/json
 app.use(express.json())
 
 morgan.token('postbody', (req, res) => {
@@ -108,6 +110,12 @@ app.put('/api/persons/:id', (req, res, next) => {
 const errorHandler = (error, request, response, next) => {
     console.error('error message: ', error.message)
     
+    if (error.name === 'ValidationError') {
+        return response
+            .status(400)
+            .json({error: error.message})
+    }
+
     next(error)
   }
   
